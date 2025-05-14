@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        input[type="text"], input[type="number"] { width: 100%; box-sizing: border-box; }
+        .results { margin-top: 20px; }
+        button { padding: 10px 20px; }
+    </style>
+</head>
+<body>
+<h1>Expense Calculator</h1>
+
+<table id="expense-table">
+    <thead>
+    <tr>
+        <th>Category</th>
+        <th>Amount ($)</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td><input type="text" value="Groceries"></td>
+        <td><input type="number" value="15000"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+    </tr>
+    <tr>
+        <td><input type="text" value="Rent"></td>
+        <td><input type="number" value="40000"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+    </tr>
+    <tr>
+        <td><input type="text" value="Transportation"></td>
+        <td><input type="number" value="5000"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+    </tr>
+    <tr>
+        <td><input type="text" value="Entertainment"></td>
+        <td><input type="number" value="10000"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+    </tr>
+    <tr>
+        <td><input type="text" value="Communication"></td>
+        <td><input type="number" value="2000"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+    </tr>
+    <tr>
+        <td><input type="text" value="Gym"></td>
+        <td><input type="number" value="3000"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+    </tr>
+    </tbody>
+</table>
+
+<button onclick="addExpense()">Add Expense</button>
+<button onclick="calculate()">Calculate</button>
+
+<div class="results" id="results"></div>
+
+<script>
+    function addExpense() {
+      const table = document.getElementById("expense-table").getElementsByTagName('tbody')[0];
+      const row = table.insertRow();
+      row.innerHTML = `
+        <td><input type="text" placeholder="Category"></td>
+        <td><input type="number" placeholder="Amount ($)"></td>
+        <td><button onclick="removeRow(this)">Remove</button></td>
+      `;
+    }
+
+    function removeRow(button) {
+      const row = button.parentElement.parentElement;
+      row.remove();
+    }
+
+    function calculate() {
+      const rows = document.querySelectorAll("#expense-table tbody tr");
+      let total = 0;
+      const expenses = [];
+
+      rows.forEach(row => {
+        const category = row.cells[0].querySelector("input").value.trim();
+        const amount = parseFloat(row.cells[1].querySelector("input").value);
+
+        if (category && !isNaN(amount)) {
+          total += amount;
+          expenses.push({ category, amount });
+        }
+      });
+
+      const avgDaily = (total / 30).toFixed(2);
+      const top3 = expenses.sort((a, b) => b.amount - a.amount).slice(0, 3);
+
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = `
+        <p><strong>Total Expenses:</strong> $${total.toLocaleString()}</p>
+        <p><strong>Average Daily Expense:</strong> $${avgDaily}</p>
+        <p><strong>Top 3 Expenses:</strong></p>
+        <ul>
+          ${top3.map(e => `<li>${e.category} ($${e.amount.toLocaleString()})</li>`).join('')}
+        </ul>
+      `;
+    }
+  </script>
+</body>
+</html>

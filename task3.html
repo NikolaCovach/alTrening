@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales SQL Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        textarea, pre { width: 100%; box-sizing: border-box; font-family: monospace; }
+        textarea { height: 120px; margin-bottom: 10px; }
+        button { padding: 10px 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+<h1>Sales SQL Analyzer</h1>
+<p>Write and run SQL queries to analyze sales data.</p>
+<textarea id="query">-- Example Query: Total sales for March 2024
+SELECT SUM(amount) AS total_march_sales
+FROM orders
+WHERE strftime('%Y-%m', order_date) = '2024-03';</textarea>
+<button onclick="runQuery()">Run Query</button>
+<div id="results"></div>
+
+<script>
+    let db;
+
+    async function initDatabase() {
+      const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
+      db = new SQL.Database();
+      const initSQL = `
+        CREATE TABLE orders (
+          id INTEGER PRIMARY KEY,
+          customer TEXT,
+          amount REAL,
+          order_date DATE
+        );
+
+        INSERT INTO orders (customer, amount, order_date) VALUES
+        ('Alice', 5000, '2024-03-01'),
+        ('Bob', 8000, '2024-03-05'),
+        ('Alice', 3000, '2024-03-15'),
+        ('Charlie', 7000, '2024-02-20'),
+        ('Alice', 10000, '2024-02-28'),
+        ('Bob', 4000, '2024-02-10'),
+        ('Charlie', 9000, '2024-03-22'),
+        ('Alice', 2000, '2024-03-30');
+      `;
+      db.run(initSQL);
+    }
+
+    function runQuery() {
+      const query = document.getElementById("query").value;
+      const resultsDiv = document.getElementById("results");
+      try {
+        const results = db.exec(query);
+        if (results.length === 0) {
+          resultsDiv.innerHTML = '<p>No results returned.</p>';
+          return;
+        }
+
+        const columns = results[0].columns;
+        const values = results[0].values;
+
+        let tableHTML = '<table><thead><tr>' +
+          columns.map(col => `<th>${col}</th>`).join('') +
+          '</tr></thead><tbody>' +
+          values.map(row => `<tr>${row.map(val => `<td>${val}</td>`).join('')}</tr>`).join('') +
+          '</tbody></table>';
+
+        resultsDiv.innerHTML = tableHTML;
+      } catch (err) {
+        resultsDiv.innerHTML = `<p style="color:red;">Error: ${err.message}</p>`;
+      }
+    }
+
+    initDatabase();
+  </script>
+</body>
+</html>

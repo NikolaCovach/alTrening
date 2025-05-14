@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Product Data Validator</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+<h1>API Product Data Validator</h1>
+<button onclick="testFakeStoreAPI()">Run Tests</button>
+<div id="results"></div>
+
+<script>
+    async function testFakeStoreAPI() {
+      const API_URL = 'https://fakestoreapi.com/products';
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>Loading...</p>';
+
+      try {
+        const response = await fetch(API_URL);
+
+        if (response.status !== 200) {
+          resultsDiv.innerHTML = `<p class="error">❌ Failed: Expected status 200 but got ${response.status}</p>`;
+          return;
+        } else {
+          resultsDiv.innerHTML = `<p class="success">✅ Test Passed: Status code is 200</p>`;
+        }
+
+        const data = await response.json();
+        const defectiveProducts = [];
+
+        data.forEach((product, index) => {
+          const errors = [];
+
+          if (!product.title || product.title.trim() === '') {
+            errors.push('Missing or empty title');
+          }
+
+          if (typeof product.price !== 'number' || product.price < 0) {
+            errors.push('Negative or invalid price');
+          }
+
+          if (
+            !product.rating ||
+            typeof product.rating.rate !== 'number' ||
+            product.rating.rate > 5
+          ) {
+            errors.push('Invalid or too high rating');
+          }
+
+          if (errors.length > 0) {
+            defectiveProducts.push({
+              id: product.id,
+              title: product.title,
+              errors: errors.join(', ')
+            });
+          }
+        });
+
+        if (defectiveProducts.length === 0) {
+          resultsDiv.innerHTML += `<p class="success">✅ All products passed validation. No defects found.</p>`;
+        } else {
+          let tableHTML = `
+            <p class="warning">⚠️ ${defectiveProducts.length} defective product(s) found:</p>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>Title</th><th>Errors</th></tr>
+              </thead>
+              <tbody>
+          `;
+
+          defectiveProducts.forEach(product => {
+            tableHTML += `<tr><td>${product.id}</td><td>${product.title}</td><td>${product.errors}</td></tr>`;
+          });
+
+          tableHTML += '</tbody></table>';
+          resultsDiv.innerHTML += tableHTML;
+        }
+
+      } catch (err) {
+        resultsDiv.innerHTML = `<p class="error">❌ Error fetching or processing data: ${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
